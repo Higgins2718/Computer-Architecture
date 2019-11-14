@@ -4,18 +4,48 @@ import sys
 
 class CPU:
     """Main CPU class."""
+    register = [0] * 8
+    ram = [0] * 256
+    pc = 0
+    SP = 7
+    halted = False
+    # COMMENT OUT MAYBE
+    register[SP] = 0xf4
+
+    HALT = 1
+    #LDI = 10000010
+    LDI = 130
+    MUL = 162
+    #PRN = 1000111
+    PRN = 71
 
     def __init__(self):
         """Construct a new CPU."""
         pass
 
-    def load(self):
+    def load(self, progname=None):
         """Load a program into memory."""
+        progname='examples/print8.ls8'
+        #progname='examples/mult.ls8'
 
+        print("LOADING")
         address = 0
 
         # For now, we've just hardcoded a program:
-
+        #'''
+        with open(progname) as f:
+            for line in f:
+                line = line.split('#')[0]
+                line = line.strip()
+        
+                if line == '':
+                    continue
+                val = int(line, 2)
+                print("VAL", val)
+                self.ram[address] = val
+                address += 1
+        print("RAM", self.ram)
+        '''
         program = [
             # From print8.ls8
             0b10000010, # LDI R0,8
@@ -25,11 +55,11 @@ class CPU:
             0b00000000,
             0b00000001, # HLT
         ]
-
+        print("PROGRAM ", program)
         for instruction in program:
             self.ram[address] = instruction
             address += 1
-
+        '''
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -62,4 +92,42 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        #print("RUNNING")
+        #pass
+        while not self.halted:
+            instruction = self.ram[self.pc]
+            #print("INSTRUCTION ", instruction)
+            if instruction == self.LDI:
+                #print("RUN LDI")
+                #value = self.ram[self.pc + 1]
+                #reg_num = self.ram[self.pc + 2]
+                reg_num = self.ram[self.pc + 1]
+                value = self.ram[self.pc + 2]
+
+                print("REG NUM", reg_num)
+                print("VALUE", value)
+
+                self.register[reg_num] = value
+                self.pc += 3
+            elif instruction == self.MUL:
+                print("RUN MUL")
+
+                #print("REGISTER", self.register)
+                first = self.register[0]
+                second = self.register[1]
+                product = first * second
+                self.register[0] = product
+
+                self.pc += 3
+            elif instruction == self.PRN:
+                print("RUN PRN")
+                print("REGISTER", self.register)
+                #reg_num = self.ram[self.pc + 1]
+                #print(self.register[reg_num])
+                print(self.register[0])
+                self.pc += 2
+            elif instruction == self.HALT:
+                print("RUN HALT")
+
+                self.halted = True
+                self.pc +=1
